@@ -1,26 +1,32 @@
-# Dockerfile
+FROM node:20-buster-slim
 
-# Use an official Node.js runtime as a parent image
-FROM node:14-alpine
+# set our node environment, either development or production
+# defaults to production, compose overrides this to development on build and run
+ARG NODE_ENV=production
+ENV NODE_ENV $NODE_ENV
 
-# Set the working directory to /app
-WORKDIR /app
+# default to port 19006 for node, and 19001 and 19002 (tests) for debug
+ARG PORT=19006
+ENV PORT $PORT
+EXPOSE $PORT 19001 19002
 
-# Copy the package.json and yarn.lock files to the working directory
-COPY package.json yarn.lock ./
+# install global packages
+ENV NPM_CONFIG_PREFIX=/home/node/.npm-global
+ENV PATH /home/node/.npm-global/bin:$PATH
+RUN npm i --unsafe-perm --allow-root -g npm@latest expo-cli@latest
 
-# Install app dependencies
-RUN yarn install --frozen-lockfile
+# install dependencies first, in a different location for easier app bind mounting for local development
+# due to default /opt permissions we have to create the dir with root and change perms
+RUN mkdir /opt/Shop-mobile
+WORKDIR /opt/Shop-mobile
+ENV PATH /opt/Shop-mobile/.bin:$PATH
+COPY ./package.json ./package-lock.json ./
+RUN npm install
 
-# Copy the entire app directory to the working directory
-COPY . .
+# copy in our source code last, as it changes the most
+WORKDIR /opt/Shop-mobile/app
+# for development, we bind mount volumes; comment out for production
+COPY ./ .
 
-# Build the app for production
-RUN npx react-native bundle --platform ios --dev false --entry-file index.js --bundle-output ios/main.jsbundle --assets-dest ios/assets
-RUN npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res
-
-# Expose port 8080 for the React Native packager
-EXPOSE 8080
-
-# Start the app
-CMD ["npx", "react-native", "start"]
+ENTRYPOINT ["npm", "run"]
+CMD ["web"]
