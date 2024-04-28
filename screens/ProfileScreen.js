@@ -1,29 +1,50 @@
-// screens/ProfileScreen.js
 import React from 'react';
-import { View, Text, StyleSheet, Button } from 'react-native';
+import { View, Text, StyleSheet, Button, Alert } from 'react-native';
 
-const ProfileScreen = () => {
-  return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Profil Użytkownika</Text>
-        {/* Tutaj można dodać informacje o użytkowniku i opcje */}
-        <Button title="Wyloguj" onPress={() => console.log('Wylogowano')} />
-      </View>
-  );
+const ProfileScreen = ({ navigation }) => {
+    const handleLogout = async () => {
+        try {
+            const response = await fetch('http://localhost:8080/logout', {
+                method: 'GET', // or POST if your server requires
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Include credentials and tokens if needed
+                },
+            });
+
+            if (response.ok) {
+                console.log('Wylogowano');
+                Alert.alert("Logged Out", "You have been successfully logged out.");
+                navigation.navigate('LoginScreen'); // Redirect to the login screen or wherever appropriate
+            } else {
+                throw new Error('Failed to logout');
+            }
+        } catch (error) {
+            console.error('Logout failed:', error);
+            Alert.alert("Error", "Logout failed, please try again.");
+        }
+    };
+
+    return (
+        <View style={styles.container}>
+            <Text style={styles.title}>Profil Użytkownika</Text>
+            {/* Information about the user could be added here */}
+            <Button title="Wyloguj" onPress={handleLogout} />
+        </View>
+    );
 };
 
 const styles = StyleSheet.create({
-  // Styl `container` i `title` może pozostać taki sam jak w HomeScreen
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 20,
+    },
 });
 
 export default ProfileScreen;

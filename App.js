@@ -8,6 +8,7 @@ import HomeScreen from './screens/HomeScreen';
 import FavoritesScreen from './screens/FavoritesScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import SearchScreen from './screens/SearchScreen';
+import SettingsScreen from './screens/SettingsScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -27,18 +28,20 @@ export default function App() {
                             iconName = focused ? 'person' : 'person-outline';
                         } else if (route.name === 'Search') {
                             iconName = focused ? 'search' : 'search-outline';
+                        }else if (route.name === 'Settings') {
+                            iconName = focused ? 'settings' : 'settings-outline';
                         }
 
                         return <Ionicons name={iconName} size={size} color={color} />;
                     },
                     tabBarActiveTintColor: 'tomato',
                     tabBarInactiveTintColor: 'gray',
-                })}
-            >
+                })}>
                 <Tab.Screen name="Home" component={HomeScreen} />
                 <Tab.Screen name="Favorites" component={FavoritesScreen} />
                 <Tab.Screen name="Profile" component={ProfileScreen} />
                 <Tab.Screen name="Search" component={SearchScreen} />
+                <Tab.Screen name="Settings" component={SettingsScreen} />
             </Tab.Navigator>
         </NavigationContainer>
     );
