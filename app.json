@@ -19,12 +19,23 @@
     },
     "android": {
       "adaptiveIcon": {
+        "package": "com.yourcompany.yourappname",
+        "versionCode": 1,
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.marcelfilosek.Shopmobile"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "39dd0b21-8168-4c27-817e-7aed5fe526bb"
+      }
     }
   }
 }
