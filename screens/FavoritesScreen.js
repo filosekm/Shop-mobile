@@ -1,70 +1,68 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, FlatList, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, Text, FlatList, Alert } from 'react-native';
+import { getFavorites, fetchFavoritePosts } from '../services/favoritesService';
+import FavoritePost from '../components/FavoritePost';
+import styles from '../styles/FavoritesScreenStyles';
 
 const FavoritesScreen = () => {
     const [favorites, setFavorites] = useState([]);
+    const [favoritePosts, setFavoritePosts] = useState([]);
+    const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
         loadFavorites();
+    }, [refreshing]);
+
+    useEffect(() => {
+        if (favorites.length > 0) {
+            fetchFavoritePosts(favorites).then(posts => {
+                setFavoritePosts(posts);
+            });
+        } else {
+            setFavoritePosts([]);
+        }
+    }, [favorites]);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setRefreshing(true);
+        }, 5000);
+
+        return () => clearInterval(interval);
     }, []);
 
     const loadFavorites = async () => {
         try {
-            const favs = await AsyncStorage.getItem('favorites');
-            if (favs !== null) {
-                // Assuming favs is stored as an array of post IDs
-                setFavorites(JSON.parse(favs));
-            }
+            const favs = await getFavorites();
+            setFavorites(favs);
         } catch (error) {
             Alert.alert("Error", "Failed to load favorites.");
+        } finally {
+            setRefreshing(false);
         }
     };
 
-    const renderFavoriteItem = ({ item }) => (
-        <View style={styles.postCard}>
-            <Text style={styles.postTitle}>{item.title}</Text>
-            <Text>{item.content}</Text>
-        </View>
-    );
+    const handleRefresh = () => {
+        setRefreshing(true);
+    };
 
     return (
-        <ScrollView style={styles.container}>
+        <View style={styles.container}>
             <Text style={styles.title}>Ulubione Wpisy</Text>
-            <FlatList
-                data={favorites}
-                keyExtractor={item => item.id.toString()}
-                renderItem={renderFavoriteItem}
-            />
-        </ScrollView>
+            {favoritePosts.length > 0 ? (
+                <FlatList
+                    data={favoritePosts}
+                    renderItem={({ item }) => <FavoritePost post={item} />}
+                    keyExtractor={(item) => item.id?.toString() || item.toString()}
+                    refreshing={refreshing}
+                    onRefresh={handleRefresh}
+                    testID="favoritesList"
+                />
+            ) : (
+                <Text style={styles.errorMessage}>Brak ulubionych wpisów.</Text>
+            )}
+        </View>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-    },
-    postCard: {
-        backgroundColor: '#f9f9f9',
-        padding: 15,
-        borderRadius: 5,
-        marginBottom: 15,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.22,
-        shadowRadius: 1.22,
-        elevation: 3,
-    },
-    postTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-});
 
 export default FavoritesScreen;

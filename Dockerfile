@@ -1,32 +1,39 @@
+# Używamy obrazu Node.js 20 na bazie systemu operacyjnego Debian Buster Slim
 FROM node:20-buster-slim
 
 # set our node environment, either development or production
-# defaults to production, compose overrides this to development on build and run
 ARG NODE_ENV=production
 ENV NODE_ENV $NODE_ENV
 
 # default to port 19006 for node, and 19001 and 19002 (tests) for debug
 ARG PORT=19006
 ENV PORT $PORT
-EXPOSE $PORT 19001 19002
+EXPOSE 19006 19001 19002
+# add in your own IP that was assigned by EXPO for your local machine
+ENV REACT_NATIVE_PACKAGER_HOSTNAME="192.168.1.210"
 
 # install global packages
 ENV NPM_CONFIG_PREFIX=/home/node/.npm-global
 ENV PATH /home/node/.npm-global/bin:$PATH
-RUN npm i --unsafe-perm --allow-root -g npm@latest expo-cli@latest
+RUN npm i --unsafe-perm -g npm@latest expo-cli@latest
+RUN apt-get update && apt-get install -y qemu-user-static
+#We need to install this inorder to start a tunnel on the docker conatiner
+RUN yarn add @expo/ngrok
 
 # install dependencies first, in a different location for easier app bind mounting for local development
 # due to default /opt permissions we have to create the dir with root and change perms
-RUN mkdir /opt/Shop-mobile
+RUN mkdir /opt/Shop-mobile && chown root:root /opt/Shop-mobile
 WORKDIR /opt/Shop-mobile
 ENV PATH /opt/Shop-mobile/.bin:$PATH
-COPY ./package.json ./package-lock.json ./
-RUN npm install
+USER root
+COPY package.json package-lock.json ./
+RUN yarn install
+
 
 # copy in our source code last, as it changes the most
-WORKDIR /opt/Shop-mobile/app
+WORKDIR /opt/Shop-mobile
 # for development, we bind mount volumes; comment out for production
-COPY ./ .
+COPY . /opt/Shop-mobile/
 
-ENTRYPOINT ["npm", "run"]
-CMD ["web"]
+
+CMD ["npx","expo", "start"]
