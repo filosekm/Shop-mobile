@@ -17,10 +17,6 @@ const ReportsScreen = () => {
                         'Authorization': `Bearer ${token}`,
                     }
                 });
-                console.log(response)
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
 
                 const json = await response.json();
                 setData(json);
